@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STRMLY - Home</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #333; }
+        .video-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        video { width: 100%; max-width: 400px; height: auto; }
+    </style>
+</head>
+<body>
+
+<h2>Upload New Video</h2>
+<form id="uploadForm">
+    <input type="text" id="videoTitle" placeholder="Title" required><br><br>
+    <input type="text" id="videoDescription" placeholder="Description"><br><br>
+    <input type="file" id="videoFile" accept="video/mp4" required><br><br>
+    <button type="submit">Upload</button>
+</form>
+
+<h2>Video Feed</h2>
+<button onclick="loadFeed()">Load Videos</button>
+<div id="videoFeed"></div>
+
+<script>
+    // Upload Video
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData();
+        formData.append('title', document.getElementById('videoTitle').value);
+        formData.append('description', document.getElementById('videoDescription').value);
+        formData.append('file', document.getElementById('videoFile').files[0]);
+
+        const res = await fetch('http://localhost:8080/upload', {
+            method: 'POST',
+            credentials: 'include', 
+            body: formData
+        });
+
+        const data = await res.json();
+        alert('Upload: ' + JSON.stringify(data));
+    });
+
+    // Load Video Feed
+    async function loadFeed() {
+    const res = await fetch('http://localhost:8080/videos', {
+        method: 'GET',
+        credentials: 'include'
+    });
+
+    if (!res.ok) { // catch 401 Unauthorized
+        const text = await res.text();
+        alert('Error: ' + text);
+        return;
+    }
+
+    const videos = await res.json();
+    const feed = document.getElementById('videoFeed');
+    feed.innerHTML = '';
+    videos.forEach(v => {
+        feed.innerHTML += `
+            <div class="video-card">
+                <h3>${v.title}</h3>
+                <p>${v.description}</p>
+                <video controls>
+                    <source src="${v.url}" type="video/mp4">
+                </video>
+                <p>Uploader ID: ${v.uploader_id}</p>
+            </div>
+        `;
+    });
+}
+
+</script>
+
+</body>
+</html>
