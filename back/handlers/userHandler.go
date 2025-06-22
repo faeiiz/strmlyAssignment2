@@ -95,7 +95,6 @@ func (h *UserHandler) Profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return only public user info
 	response := struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`

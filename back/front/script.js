@@ -38,7 +38,7 @@ async function login() {
       headers: { "Content-Type": "application/json" },
      credentials: 'include', 
     body: JSON.stringify({ email, password }),
-    credentials: "include", // Important: allows sending/receiving cookies
+    credentials: "include", //sends httpOnly cookies to back
   });
 
   const data = await res.json();
@@ -48,8 +48,6 @@ async function login() {
     alert("Login failed");
   }
 }
-
-// Attach listeners to buttons
 document
   .querySelector(".flip-card__front button")
   .addEventListener("click", (e) => {

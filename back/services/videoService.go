@@ -13,6 +13,7 @@ import (
 type VideoService interface {
 	UploadVideo(title, description, uploaderID string, file multipart.File) error
 	GetAllVideos() ([]repository.Video, error)
+	GetVideosPaginated(page, limit int) ([]repository.Video, error)
 }
 
 type videoService struct {
@@ -25,8 +26,6 @@ func NewVideoService(r repository.VideoRepository) VideoService {
 
 func (v *videoService) UploadVideo(title, description, uploaderID string, file multipart.File) error {
 	ctx := context.Background()
-
-	// Read file to []byte
 
 	uploadResult, err := initializers.Cloud.Upload.Upload(ctx, file, uploader.UploadParams{
 		Folder: "strmly_videos",
@@ -41,11 +40,15 @@ func (v *videoService) UploadVideo(title, description, uploaderID string, file m
 		Description: description,
 		URL:         uploadResult.SecureURL,
 		UploaderID:  uploaderID,
-		UploadDate:  time.Now(), // ✅ new
+		UploadDate:  time.Now(),
 	}
 	return v.repo.Create(video)
 }
 
 func (v *videoService) GetAllVideos() ([]repository.Video, error) {
 	return v.repo.GetAll()
+}
+
+func (v *videoService) GetVideosPaginated(page, limit int) ([]repository.Video, error) {
+	return v.repo.GetPaginated(page, limit)
 }

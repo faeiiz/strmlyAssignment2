@@ -29,6 +29,7 @@ func main() {
 	videoService := services.NewVideoService(videoRepo)
 	videoHandler := handlers.NewVideoHandler(videoService)
 
+	// Serve static files from the "front" directory
 	fs := http.FileServer(http.Dir("front"))
 	http.Handle("/", fs)
 

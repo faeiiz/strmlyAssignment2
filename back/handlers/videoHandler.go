@@ -4,6 +4,8 @@ import (
 	"back/services"
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -49,28 +51,48 @@ func (h *VideoHandler) GetVideos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	videos, err := h.Service.GetAllVideos()
+	q := r.URL.Query()
+	page := 1
+	limit := 10
+	if p := q.Get("page"); p != "" {
+		if pi, err := strconv.Atoi(p); err == nil && pi > 0 {
+			page = pi
+		}
+	}
+	if l := q.Get("limit"); l != "" {
+		if li, err := strconv.Atoi(l); err == nil && li > 0 {
+			limit = li
+		}
+	}
+
+	videos, err := h.Service.GetVideosPaginated(page, limit)
 	if err != nil {
 		http.Error(w, "Error fetching videos", http.StatusInternalServerError)
 		return
 	}
 
 	type VideoResponse struct {
-		Title       string    `json:"title"`
-		URL         string    `json:"url"`
-		Description string    `json:"description"`
-		UploaderID  string    `json:"uploader_id"`
-		UploadDate  time.Time `json:"upload_date"`
+		Title        string    `json:"title"`
+		Description  string    `json:"description"`
+		URL          string    `json:"url"`
+		OptimizedURL string    `json:"optimized_url,omitempty"`
+		UploaderID   string    `json:"uploader_id"`
+		UploadDate   time.Time `json:"upload_date"`
 	}
-
 	var resp []VideoResponse
 	for _, v := range videos {
+		optURL := ""
+		if v.URL != "" {
+
+			optURL = strings.Replace(v.URL, "/upload/", "/upload/q_auto,f_auto/", 1)
+		}
 		resp = append(resp, VideoResponse{
-			Title:       v.Title,
-			URL:         v.URL,
-			Description: v.Description,
-			UploaderID:  v.UploaderID,
-			UploadDate:  v.UploadDate,
+			Title:        v.Title,
+			Description:  v.Description,
+			URL:          v.URL,
+			OptimizedURL: optURL,
+			UploaderID:   v.UploaderID,
+			UploadDate:   v.UploadDate,
 		})
 	}
 

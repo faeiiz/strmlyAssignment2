@@ -23,13 +23,12 @@ func NewUserService(r repository.UserRepository) UserService {
 }
 
 func (u *userService) Signup(user repository.User) error {
-	// Check if user exists
+	// if user already availble
 	existing, _ := u.repo.FindByEmail(user.Email)
 	if existing != nil {
 		return errors.New("user already exists")
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -49,8 +48,6 @@ func (u *userService) Login(email, password string) (*repository.User, string, e
 	if err != nil {
 		return nil, "", errors.New("invalid password")
 	}
-
-	// Generate JWT
 	token, err := jwt.GenerateJWT(user.ID)
 	if err != nil {
 		return nil, "", errors.New("failed to generate token")

@@ -22,6 +22,7 @@ type Video struct {
 type VideoRepository interface {
 	Create(video Video) error
 	GetAll() ([]Video, error)
+	GetPaginated(page, limit int) ([]Video, error)
 }
 
 type videoRepo struct {
@@ -55,5 +56,30 @@ func (v *videoRepo) GetAll() ([]Video, error) {
 		videos = append(videos, video)
 	}
 
+	return videos, nil
+}
+
+func (v *videoRepo) GetPaginated(page, limit int) ([]Video, error) {
+	var videos []Video
+	skip := int64((page - 1) * limit)
+	lim := int64(limit)
+	opts := options.Find().
+		SetSort(bson.M{"upload_date": -1}).
+		SetSkip(skip).
+		SetLimit(lim)
+
+	cursor, err := initializers.DB.Collection("videos").Find(context.TODO(), bson.M{}, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		var video Video
+		if err := cursor.Decode(&video); err != nil {
+			return nil, err
+		}
+		videos = append(videos, video)
+	}
 	return videos, nil
 }

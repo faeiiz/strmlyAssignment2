@@ -17,7 +17,6 @@ func JWTAuth(next http.Handler) http.Handler {
 		}
 		tokenStr := cookie.Value
 
-		// Parse & verify token
 		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method")
@@ -30,14 +29,12 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Save user_id from token to context for later use
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
 
-		// Set user_id in request context (or as header for simplicity)
 		r.Header.Set("user_id", fmt.Sprintf("%v", claims["user_id"]))
 		next.ServeHTTP(w, r)
 	})
